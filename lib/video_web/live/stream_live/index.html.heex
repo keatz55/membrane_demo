@@ -1,0 +1,39 @@
+<h1>Listing Streams</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <%= live_modal VideoWeb.StreamLive.FormComponent,
+    id: @stream.id || :new,
+    title: @page_title,
+    action: @live_action,
+    stream: @stream,
+    return_to: Routes.stream_index_path(@socket, :index) %>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Type</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="streams">
+    <%= for stream <- @page.entries do %>
+      <tr id={"stream-#{stream.id}"}>
+        <td><%= stream.id %></td>
+        <td><%= stream.name %></td>
+        <td><%= stream.type %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.stream_show_path(@socket, :show, stream) %></span>
+          <span><%= live_patch "Edit", to: Routes.stream_index_path(@socket, :edit, stream) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: stream.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Stream", to: Routes.stream_index_path(@socket, :new) %></span>

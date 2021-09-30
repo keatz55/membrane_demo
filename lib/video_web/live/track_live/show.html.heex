@@ -1,0 +1,77 @@
+<h1>Show Track</h1>
+
+<%= if @live_action in [:edit] do %>
+  <%= live_modal VideoWeb.TrackLive.FormComponent,
+    id: @track.id,
+    title: @page_title,
+    action: @live_action,
+    track: @track,
+    return_to: Routes.track_show_path(@socket, :show, @track) %>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>ID:</strong>
+    <%= @track.id %>
+  </li>
+
+  <li>
+    <strong>Type:</strong>
+    <%= @track.type %>
+  </li>
+
+  <li>
+    <strong>SSRC:</strong>
+    <%= @track.ssrc %>
+  </li>
+
+</ul>
+
+<p>Ffmpeg</p>
+<pre>
+ffmpeg \
+  -rtsp_transport tcp -i rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov \
+  -an -c:v copy \
+  -payload_type 96 -ssrc <%= @track.ssrc %> -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params <%= Base.encode64(@srtp_key) %> \
+  -f rtp srtp://127.0.0.1:5000
+</pre>
+
+<p>Gstreamer</p>
+<pre>
+gst-launch-1.0 -v \
+  audiotestsrc \
+  ! audio/x-raw,rate=44100 \
+  ! faac \
+  ! rtpmp4gpay pt=127 ssrc=2 \
+  ! srtpenc key="<%= Base.encode16(@srtp_key) %>" \
+    rtp-cipher="aes-128-icm" rtp-auth="hmac-sha1-80" \
+    rtcp-cipher="aes-128-icm" rtcp-auth="hmac-sha1-80" \
+  ! udpsink host=127.0.0.1 port=5000 \
+  videotestsrc \
+  ! video/x-raw,format=I420 \
+  ! x264enc key-int-max=10 tune=zerolatency \
+  ! rtph264pay pt=96 ssrc=1 \
+  ! srtpenc key="<%= Base.encode16(@srtp_key) %>" \
+    rtp-cipher="aes-128-icm" rtp-auth="hmac-sha1-80" \
+    rtcp-cipher="aes-128-icm" rtcp-auth="hmac-sha1-80" \
+  ! udpsink host=127.0.0.1 port=5000
+</pre>
+
+<p>Gstreamer (RTP)</p>
+<pre>
+gst-launch-1.0 -v \
+  audiotestsrc \
+  ! audio/x-raw,rate=44100 \
+  ! faac \
+  ! rtpmp4gpay pt=127 ssrc=2 \
+  ! udpsink host=127.0.0.1 port=5000 \
+  videotestsrc \
+  ! video/x-raw,format=I420 \
+  ! x264enc key-int-max=10 tune=zerolatency \
+  ! rtph264pay pt=96 ssrc=1 \
+  ! udpsink host=127.0.0.1 port=5000
+</pre>
+
+<span><%= live_patch "Edit", to: Routes.track_show_path(@socket, :edit, @track), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.track_index_path(@socket, :index) %></span>

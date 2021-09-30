@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    ports:
+      - 9000:9000
+    environment:
+      MINIO_ACCESS_KEY: local_access
+      MINIO_SECRET_KEY: local_access
+    entrypoint: sh
+    command: -c 'mkdir -p /data/uploads && /usr/bin/minio server /data'
+
+volumes:
+  db_data:
+  minio_data:

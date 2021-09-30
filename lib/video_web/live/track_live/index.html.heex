@@ -1,0 +1,37 @@
+<h1>Listing Tracks</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <%= live_modal VideoWeb.TrackLive.FormComponent,
+    id: @track.id || :new,
+    title: @page_title,
+    action: @live_action,
+    track: @track,
+    return_to: Routes.track_index_path(@socket, :index) %>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>SSRC</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="tracks">
+    <%= for track <- @page.entries do %>
+      <tr id={"track-#{track.id}"}>
+        <td><%= track.type %></td>
+        <td><%= track.ssrc %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.track_show_path(@socket, :show, track) %></span>
+          <span><%= live_patch "Edit", to: Routes.track_index_path(@socket, :edit, track) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: track.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Track", to: Routes.track_index_path(@socket, :new) %></span>
